@@ -45,9 +45,9 @@ body {
 }
 
 .header {
-	/* margin-top: 7vh; */
+	margin-top: 7vh;
 	padding: 1rem;
-	display: none;
+	/* display: none; */
 }
 
 .header :where(.title .subtitle) {

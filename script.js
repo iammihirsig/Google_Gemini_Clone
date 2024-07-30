@@ -1,11 +1,14 @@
 const typingForm = document.querySelector(".typing-form");
 const chatList = document.querySelector(".chat-list");
+const suggestions = document.querySelectorAll(".suggestion-list .suggestion");
 const toggleThemeButton = document.querySelector("#toggle-theme-button");
 const deleteChatButton = document.querySelector("#delete-chat-button");
+const header = document.querySelector(".header"); // Select your header element
 
 // Key for local storage
 const THEME_STORAGE_KEY = "themeColor";
 const CHAT_STORAGE_KEY = "savedChats";
+const HEADER_VISIBILITY_KEY = "headerVisibility"; // Key for header visibility
 
 // Initialize the theme from local storage
 const applyStoredTheme = () => {
@@ -31,10 +34,22 @@ const applyStoredChat = () => {
 // Apply stored chat on page load
 applyStoredChat();
 
+// Apply header visibility based on local storage
+const applyHeaderVisibility = () => {
+	const headerVisible = localStorage.getItem(HEADER_VISIBILITY_KEY) !== "false";
+	if (header) {
+		header.style.display = headerVisible ? "block" : "none";
+	}
+};
+
+// Apply header visibility on page load
+applyHeaderVisibility();
+
 let userMessage = null;
+let isResponseGenerating = false;
 
 // API Configuration
-const API_KEY = "ENTER_YOUR_API"; // Enter your own API Key
+const API_KEY = "ENTER YOUR API"; // Enter your own API Key
 const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`;
 
 // Create a new message element and return it
@@ -61,6 +76,7 @@ const showTypingEffect = (text, textElement) => {
 		// If all words are displayed
 		if (currentWordIndex === words.length) {
 			clearInterval(typingInterval);
+			isResponseGenerating = false;
 			saveChatHistory(); // Save chats to local storage after typing effect
 
 			// Show the copy icon after typing effect is done
@@ -102,11 +118,36 @@ const generateAPIResponse = async (incomingMessageDiv) => {
 		// Display the API response text with typing effect
 		showTypingEffect(cleanedResponse, textElement);
 	} catch (error) {
+		isResponseGenerating = false;
 		console.log(error);
 	} finally {
 		incomingMessageDiv.classList.remove("loading");
 	}
 };
+
+// Set userMessage and handle outgoing chat when a suggestion is clicked
+suggestions.forEach((suggestion) => {
+	suggestion.addEventListener("click", () => {
+		// Hide the header
+		if (header) {
+			header.style.display = "none"; // Hide header
+			localStorage.setItem(HEADER_VISIBILITY_KEY, "false"); // Save header state
+		}
+
+		// Clear the chat list
+		chatList.innerHTML = "";
+
+		// Reset response generating flag
+		isResponseGenerating = false;
+
+		// Get the suggestion text
+		userMessage = suggestion.querySelector(".text").innerText; // Correctly get the text from the suggestion
+		typingForm.querySelector(".typing-input").value = userMessage; // Set the input field to the suggestion text
+
+		// Handle sending the chat
+		handleOutgoingChat(); // Handle sending the chat
+	});
+});
 
 // Show a loading animation while waiting for the API response
 const showLoadingAnimation = () => {
@@ -141,8 +182,17 @@ const copyMessage = (copyIcon) => {
 // Handle sending outgoing messages
 const handleOutgoingChat = () => {
 	// Access the value of the input field correctly
-	userMessage = typingForm.querySelector(".typing-input").value.trim();
-	if (!userMessage) return; // Exit if there is no message
+	userMessage =
+		typingForm.querySelector(".typing-input").value.trim() || userMessage;
+	if (!userMessage || isResponseGenerating) return; // Exit if there is no message
+
+	isResponseGenerating = true;
+
+	// Hide the header
+	if (header) {
+		header.style.display = "none"; // Hide header
+		localStorage.setItem(HEADER_VISIBILITY_KEY, "false"); // Save header state
+	}
 
 	const html = `<div class="message-content">
 					<img src="img/user.jpg" alt="User Image" class="avatar" />
@@ -170,6 +220,10 @@ const clearChatHistory = () => {
 	if (confirm("Are you sure you want to delete the chat history?")) {
 		chatList.innerHTML = ""; // Clear chat list
 		localStorage.removeItem(CHAT_STORAGE_KEY); // Remove chat history from local storage
+		if (header) {
+			header.style.display = "block"; // Restore header
+			localStorage.setItem(HEADER_VISIBILITY_KEY, "true"); // Save header state
+		}
 	}
 };
 
@@ -189,6 +243,5 @@ deleteChatButton.addEventListener("click", clearChatHistory);
 // Prevent default from submission and handle outgoing chat
 typingForm.addEventListener("submit", (e) => {
 	e.preventDefault();
-
 	handleOutgoingChat();
 });
