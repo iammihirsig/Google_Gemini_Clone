@@ -1,5 +1,34 @@
 const typingForm = document.querySelector(".typing-form");
 const chatList = document.querySelector(".chat-list");
+const toggleThemeButton = document.querySelector("#toggle-theme-button");
+
+// Key for local storage
+const THEME_STORAGE_KEY = "themeColor";
+const CHAT_STORAGE_KEY = "savedChats";
+
+// Initialize the theme from local storage
+const applyStoredTheme = () => {
+	const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+	if (savedTheme) {
+		document.body.classList.toggle("light_mode", savedTheme === "light_mode");
+		toggleThemeButton.innerText =
+			savedTheme === "light_mode" ? "dark_mode" : "light_mode";
+	}
+};
+
+// Apply stored theme on page load
+applyStoredTheme();
+
+// Initialize the chat from local storage
+const applyStoredChat = () => {
+	const savedChat = localStorage.getItem(CHAT_STORAGE_KEY);
+	if (savedChat) {
+		chatList.innerHTML = savedChat;
+	}
+};
+
+// Apply stored chat on page load
+applyStoredChat();
 
 let userMessage = null;
 
@@ -25,9 +54,16 @@ const showTypingEffect = (text, textElement) => {
 		textElement.innerText +=
 			(currentWordIndex === 0 ? "" : " ") + words[currentWordIndex++];
 
+		// Scroll to the bottom while typing
+		chatList.scrollTop = chatList.scrollHeight;
+
 		// If all words are displayed
 		if (currentWordIndex === words.length) {
 			clearInterval(typingInterval);
+			saveChatHistory(); // Save chats to local storage after typing effect
+
+			// Show the copy icon after typing effect is done
+			textElement.parentElement.querySelector(".icon").style.display = "inline";
 		}
 	}, 75);
 };
@@ -35,6 +71,10 @@ const showTypingEffect = (text, textElement) => {
 // Fetch response from the API based on user message
 const generateAPIResponse = async (incomingMessageDiv) => {
 	const textElement = incomingMessageDiv.querySelector(".text"); // Get text element
+	const copyIcon = incomingMessageDiv.querySelector(".icon");
+
+	// Hide the copy icon while response is being typed
+	copyIcon.style.display = "none";
 
 	// Send a POST request to the API with user's message
 	try {
@@ -55,8 +95,11 @@ const generateAPIResponse = async (incomingMessageDiv) => {
 		const data = await response.json();
 		const apiResponse = data?.candidates[0].content.parts[0].text;
 
+		// Remove asterisks from the response
+		const cleanedResponse = apiResponse.replace(/\*/g, "");
+
 		// Display the API response text with typing effect
-		showTypingEffect(apiResponse, textElement);
+		showTypingEffect(cleanedResponse, textElement);
 	} catch (error) {
 		console.log(error);
 	} finally {
@@ -80,6 +123,9 @@ const showLoadingAnimation = () => {
 	const incomingMessageDiv = createMessageElement(html, "incoming", "loading");
 	chatList.appendChild(incomingMessageDiv);
 
+	// Scroll to the bottom after adding the loading animation
+	chatList.scrollTop = chatList.scrollHeight;
+
 	generateAPIResponse(incomingMessageDiv);
 };
 
@@ -99,17 +145,34 @@ const handleOutgoingChat = () => {
 
 	const html = `<div class="message-content">
 					<img src="img/user.jpg" alt="User Image" class="avatar" />
-					<p class="text"></p>
+					<p class="text">${userMessage}</p>
 				</div>`;
 
 	const outgoingMessageDiv = createMessageElement(html, "outgoing");
-	outgoingMessageDiv.querySelector(".text").innerText = userMessage;
 	chatList.appendChild(outgoingMessageDiv);
+
+	// Scroll to the bottom after adding the outgoing message
+	chatList.scrollTop = chatList.scrollHeight;
 
 	// Clear the input field after sending the message
 	typingForm.reset(); // Clear Input Field
 	setTimeout(showLoadingAnimation, 500); // Show loading animation after a delay
 };
+
+// Save chat history to local storage
+const saveChatHistory = () => {
+	localStorage.setItem(CHAT_STORAGE_KEY, chatList.innerHTML);
+};
+
+// Toggle between light and dark themes
+toggleThemeButton.addEventListener("click", () => {
+	const isLightMode = document.body.classList.toggle("light_mode");
+	localStorage.setItem(
+		THEME_STORAGE_KEY,
+		isLightMode ? "light_mode" : "dark_mode"
+	);
+	toggleThemeButton.innerText = isLightMode ? "dark_mode" : "light_mode";
+});
 
 // Prevent default from submission and handle outgoing chat
 typingForm.addEventListener("submit", (e) => {
