@@ -16,7 +16,9 @@ const createMessageElement = (content, ...classes) => {
 };
 
 // Fetch response from the API based on user message
-const generateAPIResponse = async () => {
+const generateAPIResponse = async (incomingMessageDiv) => {
+	const textElement = incomingMessageDiv.querySelector(".text"); // Get text element
+
 	// Send a POST request to the API with user's message
 	try {
 		const response = await fetch(API_URL, {
@@ -35,9 +37,11 @@ const generateAPIResponse = async () => {
 		const data = await response.json();
 
 		const apiResponse = data?.candidates[0].content.parts[0].text;
-		console.log(apiResponse);
+		textElement.innerText = apiResponse;
 	} catch (error) {
 		console.log(error);
+	} finally {
+		incomingMessageDiv.classList.remove("loading");
 	}
 };
 
@@ -57,7 +61,7 @@ const showLoadingAnimation = () => {
 	const incomingMessageDiv = createMessageElement(html, "incoming", "loading");
 	chatList.appendChild(incomingMessageDiv);
 
-	generateAPIResponse();
+	generateAPIResponse(incomingMessageDiv);
 };
 
 // Handle sending outgoing messages
