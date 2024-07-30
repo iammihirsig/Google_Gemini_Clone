@@ -13,7 +13,8 @@ const createMessageElement = (content, className) => {
 
 // Handle sending outgoing messages
 const handleOutgoingChat = () => {
-	userMessage = typingForm.querySelector(".typing-input").ariaValueMax.trim();
+	// Access the value of the input field correctly
+	userMessage = typingForm.querySelector(".typing-input").value.trim();
 	if (!userMessage) return; // Exit if there is no message
 
 	const html = `<div class="message-content">
@@ -24,6 +25,9 @@ const handleOutgoingChat = () => {
 	const outgoingMessageDiv = createMessageElement(html, "outgoing");
 	outgoingMessageDiv.querySelector(".text").innerText = userMessage;
 	chatList.appendChild(outgoingMessageDiv);
+
+	// Clear the input field after sending the message
+	typingForm.querySelector(".typing-input").value = '';
 };
 
 // Prevent default from submission and handle outgoing chat
