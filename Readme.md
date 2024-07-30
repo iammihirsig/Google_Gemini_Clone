@@ -20,10 +20,10 @@ This project is a basic implementation of a Google Gemini-like chat interface us
 
 
 
-bash
+```bash
     git clone https://github.com/iammihirsig/Google_Gemini_Clone.git
     cd Google_Gemini_Clone
-
+```
 
 
 2. **Install Dependencies**
