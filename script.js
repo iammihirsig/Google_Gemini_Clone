@@ -1,6 +1,7 @@
 const typingForm = document.querySelector(".typing-form");
 const chatList = document.querySelector(".chat-list");
 const toggleThemeButton = document.querySelector("#toggle-theme-button");
+const deleteChatButton = document.querySelector("#delete-chat-button");
 
 // Key for local storage
 const THEME_STORAGE_KEY = "themeColor";
@@ -164,6 +165,14 @@ const saveChatHistory = () => {
 	localStorage.setItem(CHAT_STORAGE_KEY, chatList.innerHTML);
 };
 
+// Clear chat history after confirmation
+const clearChatHistory = () => {
+	if (confirm("Are you sure you want to delete the chat history?")) {
+		chatList.innerHTML = ""; // Clear chat list
+		localStorage.removeItem(CHAT_STORAGE_KEY); // Remove chat history from local storage
+	}
+};
+
 // Toggle between light and dark themes
 toggleThemeButton.addEventListener("click", () => {
 	const isLightMode = document.body.classList.toggle("light_mode");
@@ -173,6 +182,9 @@ toggleThemeButton.addEventListener("click", () => {
 	);
 	toggleThemeButton.innerText = isLightMode ? "dark_mode" : "light_mode";
 });
+
+// Add event listener for delete chat button
+deleteChatButton.addEventListener("click", clearChatHistory);
 
 // Prevent default from submission and handle outgoing chat
 typingForm.addEventListener("submit", (e) => {
