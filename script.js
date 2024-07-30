@@ -15,6 +15,23 @@ const createMessageElement = (content, ...classes) => {
 	return div;
 };
 
+// Show typing effect by displaying words one by one
+const showTypingEffect = (text, textElement) => {
+	const words = text.split(" ");
+	let currentWordIndex = 0;
+
+	const typingInterval = setInterval(() => {
+		// Append each word to the text element with a space
+		textElement.innerText +=
+			(currentWordIndex === 0 ? "" : " ") + words[currentWordIndex++];
+
+		// If all words are displayed
+		if (currentWordIndex === words.length) {
+			clearInterval(typingInterval);
+		}
+	}, 75);
+};
+
 // Fetch response from the API based on user message
 const generateAPIResponse = async (incomingMessageDiv) => {
 	const textElement = incomingMessageDiv.querySelector(".text"); // Get text element
@@ -34,10 +51,12 @@ const generateAPIResponse = async (incomingMessageDiv) => {
 			}),
 		});
 
+		// Get the API Response text
 		const data = await response.json();
-
 		const apiResponse = data?.candidates[0].content.parts[0].text;
-		textElement.innerText = apiResponse;
+
+		// Display the API response text with typing effect
+		showTypingEffect(apiResponse, textElement);
 	} catch (error) {
 		console.log(error);
 	} finally {
@@ -80,7 +99,6 @@ const handleOutgoingChat = () => {
 	chatList.appendChild(outgoingMessageDiv);
 
 	// Clear the input field after sending the message
-	// typingForm.querySelector(".typing-input").value = '';
 	typingForm.reset(); // Clear Input Field
 	setTimeout(showLoadingAnimation, 500); // Show loading animation after a delay
 };
