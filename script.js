@@ -75,12 +75,20 @@ const showLoadingAnimation = () => {
                         <div class="loading-bar"></div>
                     </div>
 				</div>
-				<span class="icon material-symbols-rounded">content_copy</span>`;
+				<span onclick="copyMessage(this)" class="icon material-symbols-rounded">content_copy</span>`;
 
 	const incomingMessageDiv = createMessageElement(html, "incoming", "loading");
 	chatList.appendChild(incomingMessageDiv);
 
 	generateAPIResponse(incomingMessageDiv);
+};
+
+const copyMessage = (copyIcon) => {
+	const messageText = copyIcon.parentElement.querySelector(".text").innerText;
+
+	navigator.clipboard.writeText(messageText);
+	copyIcon.innerText = "done"; // Show tick icon
+	setTimeout(() => (copyIcon.innerText = "content_copy"), 1000); // Revert icon after 1 sec
 };
 
 // Handle sending outgoing messages
